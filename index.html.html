@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Tech News Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e5e5e5; min-height: 100vh; padding: 1.5rem 1rem; }
+    .container { max-width: 700px; margin: 0 auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; }
+    .header h1 { font-size: 22px; font-weight: 500; color: #fff; }
+    .header p { font-size: 13px; color: #888; margin-top: 4px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 8px 14px; cursor: pointer; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; transition: background 0.2s; }
+    .btn:hover { background: #252525; }
+    .btn-info { background: #1a2a3a; color: #60a5fa; border-color: #2a4a6a; }
+    .btn-info:hover { background: #1e3248; }
+    .btn-danger { color: #f87171; border-color: #7f1d1d; }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .tab-btn { font-size: 13px; padding: 6px 16px; cursor: pointer; border-radius: 20px; background: transparent; border: 1px solid #333; color: #888; transition: all 0.2s; }
+    .tab-btn.active { background: #1a1a1a; color: #fff; border-color: #444; }
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .filter-box { background: #1a1a1a; border-radius: 8px; padding: 0.75rem 1rem; border: 1px solid #2a2a2a; }
+    .filter-box label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+    .filter-box select { width: 100%; font-size: 13px; border: none; background: transparent; color: #e5e5e5; cursor: pointer; outline: none; }
+    .filter-box select option { background: #1a1a1a; }
+    .news-list { display: flex; flex-direction: column; gap: 10px; }
+    .card { background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1rem 1.25rem; transition: border-color 0.2s; }
+    .card:hover { border-color: #3a3a3a; }
+    .card.top { border-left: 2px solid #60a5fa; }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .card-title { font-size: 15px; font-weight: 500; color: #fff; line-height: 1.4; flex: 1; }
+    .card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .badge { background: #1a2a3a; color: #60a5fa; font-size: 11px; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+    .badge-top { background: #1a2a3a; color: #60a5fa; font-size: 11px; padding: 2px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; }
+    .meta-text { font-size: 12px; color: #666; }
+    .bookmark-btn { background: transparent; border: none; cursor: pointer; padding: 4px 6px; color: #555; font-size: 18px; line-height: 1; transition: color 0.2s; }
+    .bookmark-btn.saved { color: #e8a020; }
+    .bookmark-btn:hover { color: #e8a020; }
+    .summary-box { margin-top: 1.5rem; border-top: 1px solid #2a2a2a; padding-top: 1rem; }
+    .summary-box h3 { font-size: 13px; font-weight: 500; color: #888; margin-bottom: 8px; }
+    .summary-box p { font-size: 14px; color: #ccc; line-height: 1.7; }
+    .big-picture { background: #1a1a1a; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid #2a2a2a; }
+    .big-picture .bp-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .big-picture h3 { font-size: 14px; font-weight: 500; color: #fff; }
+    .big-picture p { font-size: 14px; color: #aaa; line-height: 1.7; }
+    .category-section { margin-bottom: 1.25rem; }
+    .category-label { font-size: 12px; font-weight: 500; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .saved-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
+    .empty { text-align: center; padding: 3rem; color: #555; font-size: 14px; }
+    .empty i { font-size: 32px; display: block; margin-bottom: 8px; }
+    .loading { text-align: center; padding: 2.5rem; color: #666; font-size: 14px; display: none; }
+    .loading i { font-size: 28px; display: block; margin-bottom: 8px; }
+    .digest-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #2a2a2a; display: flex; gap: 8px; flex-wrap: wrap; }
+    .date-text { font-size: 12px; color: #555; margin-left: auto; }
+    input[type=text] { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 8px 12px; color: #e5e5e5; font-size: 13px; width: 100%; outline: none; }
+    input[type=text]:focus { border-color: #555; }
+    .note-area { margin-top: 8px; }
+    .note-area textarea { width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 8px 12px; color: #aaa; font-size: 13px; resize: vertical; outline: none; min-height: 60px; }
+    @media (max-width: 500px) { .header { flex-direction: column; align-items: flex-start; } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <h1>Tech & AI News</h1>
+      <p>Your personal feed — no social media needed</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-info" onclick="loadDailyDigest()"><i class="ti ti-newspaper"></i> Digest</button>
+      <button class="btn" onclick="loadNews()"><i class="ti ti-refresh"></i> Refresh</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('feed')">Feed</button>
+    <button class="tab-btn" onclick="switchTab('digest')">Daily Digest</button>
+    <button class="tab-btn" onclick="switchTab('saved')">
+      <i class="ti ti-bookmark" style="font-size:13px;vertical-align:-1px;margin-right:3px;"></i>
+      Saved <span id="bookmarkCount" style="background:#1a2a3a;color:#60a5fa;font-size:11px;padding:1px 6px;border-radius:10px;margin-left:3px;">0</span>
+    </button>
+  </div>
+
+  <!-- FEED TAB -->
+  <div id="feedTab">
+    <div class="filters">
+      <div class="filter-box">
+        <label>Category</label>
+        <select id="categorySelect">
+          <option value="AI & Machine Learning">AI & ML</option>
+          <option value="Startups & Funding">Startups</option>
+          <option value="Big Tech">Big Tech</option>
+          <option value="Crypto & Web3">Crypto</option>
+          <option value="Cybersecurity">Security</option>
+          <option value="Gadgets & Hardware">Gadgets</option>
+        </select>
+      </div>
+      <div class="filter-box">
+        <label>Count</label>
+        <select id="countSelect">
+          <option value="5">5 stories</option>
+          <option value="8" selected>8 stories</option>
+          <option value="12">12 stories</option>
+        </select>
+      </div>
+    </div>
+    <div id="newsContainer" class="news-list">
+      <div class="empty"><i class="ti ti-news"></i>Click Refresh to load latest news</div>
+    </div>
+    <div id="summarySection" style="display:none;" class="summary-box">
+      <h3>AI Summary</h3>
+      <p id="summaryText"></p>
+    </div>
+  </div>
+
+  <!-- DIGEST TAB -->
+  <div id="digestTab" style="display:none;">
+    <div id="digestContainer">
+      <div class="empty"><i class="ti ti-newspaper"></i>Click "Digest" to get your full briefing</div>
+    </div>
+  </div>
+
+  <!-- SAVED TAB -->
+  <div id="savedTab" style="display:none;">
+    <div id="savedContainer"></div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loadingState" class="loading">
+    <i class="ti ti-loader"></i>
+    <span id="loadingMsg">Fetching latest news...</span>
+  </div>
+</div>
+
+<script>
+const API_KEY = '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';
+let currentArticles = [];
+let bookmarks = JSON.parse(localStorage.getItem('ai_news_bookmarks') || '[]');
+const CATEGORIES = ['AI & Machine Learning','Startups & Funding','Big Tech','Crypto & Web3','Cybersecurity'];
+
+updateBookmarkCount();
+
+function switchTab(tab) {
+  ['feed','digest','saved'].forEach(t => {
+    document.getElementById(t+'Tab').style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['feed','digest','saved'][i] === tab);
+  });
+  if (tab === 'saved') renderSaved();
+}
+
+async function callClaude(prompt, useSearch) {
+  const body = { model:"llama-3.3-70b-versatile", max_tokens:1000, messages:[{role:"user",content:prompt}] };
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization": "Bearer " + API_KEY},
+    body:JSON.stringify(body)
+  });
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
+function parseJSON(text) {
+  let clean = text.replace(/```json|```/g,'').trim();
+  const s = clean.indexOf('['), e = clean.lastIndexOf(']');
+  if (s !== -1 && e !== -1) clean = clean.slice(s, e+1);
+  return JSON.parse(clean);
+}
+
+function updateBookmarkCount() {
+  document.getElementById('bookmarkCount').textContent = bookmarks.length;
+}
+
+function saveBookmarks() {
+  localStorage.setItem('ai_news_bookmarks', JSON.stringify(bookmarks));
+  updateBookmarkCount();
+}
+
+function isBookmarked(title) { return bookmarks.some(b => b.title === title); }
+
+function toggleBookmark(article, btnEl) {
+  const idx = bookmarks.findIndex(b => b.title === article.title);
+  if (idx === -1) {
+    bookmarks.push({ ...article, savedAt: new Date().toLocaleString('en-IN') });
+    btnEl.classList.add('saved');
+    btnEl.querySelector('i').className = 'ti ti-bookmark-filled';
+  } else {
+    bookmarks.splice(idx, 1);
+    btnEl.classList.remove('saved');
+    btnEl.querySelector('i').className = 'ti ti-bookmark';
+  }
+  saveBookmarks();
+}
+
+function articleCard(a, i, source) {
+  const bm = isBookmarked(a.title);
+  return `<div class="card ${a.important?'top':''}">
+    <div class="card-header">
+      <p class="card-title">${a.title}</p>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+        ${a.important?'<span class="badge-top">Top</span>':''}
+        <button class="bookmark-btn ${bm?'saved':''}" data-idx="${i}" data-source="${source}" title="${bm?'Remove':'Save'}">
+          <i class="ti ${bm?'ti-bookmark-filled':'ti-bookmark'}"></i>
+        </button>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#aaa;line-height:1.6;">${a.summary}</p>
+    <div class="card-meta">
+      ${a.source?`<span class="meta-text"><i class="ti ti-building" style="vertical-align:-1px;margin-right:3px;"></i>${a.source}</span>`:''}
+      ${a.time?`<span class="meta-text"><i class="ti ti-clock" style="vertical-align:-1px;margin-right:3px;"></i>${a.time}</span>`:''}
+      <span class="badge">${a.tag}</span>
+      <button class="btn" style="margin-left:auto;font-size:12px;padding:4px 10px;" data-deepdive="${i}" data-source="${source}">Deep dive ↗</button>
+    </div>
+  </div>`;
+}
+
+document.addEventListener('click', function(e) {
+  const bmBtn = e.target.closest('.bookmark-btn[data-source]');
+  if (bmBtn) {
+    const idx = parseInt(bmBtn.dataset.idx);
+    const source = bmBtn.dataset.source;
+    if (source === 'feed') toggleBookmark(currentArticles[idx], bmBtn);
+    else if (source === 'saved') { bookmarks.splice(idx,1); saveBookmarks(); renderSaved(); }
+    return;
+  }
+  const ddBtn = e.target.closest('[data-deepdive]');
+  if (ddBtn) {
+    const idx = parseInt(ddBtn.dataset.deepdive);
+    const source = ddBtn.dataset.source;
+    const article = source === 'feed' ? currentArticles[idx] : bookmarks[idx];
+    if (article) {
+      const query = encodeURIComponent(`Tell me more about this news: "${article.title}" — what does it mean for the tech world and how does it affect someone building AI automation services?`);
+      window.open(`https://claude.ai/new?q=${query}`, '_blank');
+    }
+  }
+});
+
+async function loadNews() {
+  const category = document.getElementById('categorySelect').value;
+  const count = document.getElementById('countSelect').value;
+  const container = document.getElementById('newsContainer');
+  document.getElementById('summarySection').style.display = 'none';
+  container.style.display = 'none';
+  showLoading('Searching latest news...');
+  try {
+    const text = await callClaude(`Search for ${count} most recent important news about "${category}" from last 48 hours. Return ONLY JSON array:
+[{"title":"...","summary":"2 sentence summary","source":"...","time":"X hours ago","tag":"one word","important":true/false}]`, true);
+    currentArticles = parseJSON(text);
+    container.style.display = 'flex';
+    container.innerHTML = currentArticles.map((a,i) => articleCard(a,i,'feed')).join('');
+    getSummary(currentArticles, category);
+  } catch(e) {
+    container.innerHTML = `<div class="empty" style="color:#f87171;">Could not load news. Check your API key.</div>`;
+    container.style.display = 'flex';
+  }
+  hideLoading();
+}
+
+async function getSummary(articles, category) {
+  const s = document.getElementById('summarySection');
+  const t = document.getElementById('summaryText');
+  s.style.display = 'block';
+  t.textContent = 'Generating summary...';
+  try {
+    t.textContent = await callClaude(`Based on these ${category} headlines: ${articles.map(a=>a.title).join(', ')} — give a 3-sentence big picture summary. Be direct.`, false);
+  } catch(e) { s.style.display = 'none'; }
+}
+
+function renderSaved() {
+  const c = document.getElementById('savedContainer');
+  if (bookmarks.length === 0) {
+    c.innerHTML = `<div class="empty"><i class="ti ti-bookmark"></i>No saved stories yet. Bookmark from Feed or Digest.</div>`;
+    return;
+  }
+  c.innerHTML = `
+    <div class="saved-header">
+      <p style="font-size:14px;font-weight:500;color:#888;">${bookmarks.length} saved ${bookmarks.length===1?'story':'stories'}</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-danger" onclick="clearAll()">Clear all</button>
+      </div>
+    </div>
+    <div class="news-list">
+      ${bookmarks.map((a,i) => `
+        <div class="card">
+          <div class="card-header">
+            <p class="card-title">${a.title}</p>
+            <button class="bookmark-btn saved" data-idx="${i}" data-source="saved" title="Remove">
+              <i class="ti ti-bookmark-filled"></i>
+            </button>
+          </div>
+          <p style="font-size:13px;color:#aaa;line-height:1.6;">${a.summary}</p>
+          <div class="card-meta">
+            ${a.source?`<span class="meta-text">${a.source}</span>`:''}
+            <span class="badge">${a.tag}</span>
+            <span class="meta-text date-text"><i class="ti ti-calendar" style="vertical-align:-1px;margin-right:3px;"></i>${a.savedAt}</span>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function clearAll() {
+  if (confirm('Clear all saved stories?')) { bookmarks=[]; saveBookmarks(); renderSaved(); }
+}
+
+async function loadDailyDigest() {
+  switchTab('digest');
+  const container = document.getElementById('digestContainer');
+  container.style.display = 'none';
+  showLoading('Building your daily digest...');
+  const results = {};
+  for (let i=0; i<CATEGORIES.length; i++) {
+    const cat = CATEGORIES[i];
+    document.getElementById('loadingMsg').textContent = `Fetching ${cat}... (${i+1}/${CATEGORIES.length})`;
+    try {
+      const text = await callClaude(`Search 3 important news about "${cat}" last 24 hours. ONLY JSON:
+[{"title":"...","summary":"1 sentence","source":"...","tag":"one word","important":true/false}]`, true);
+      results[cat] = parseJSON(text);
+    } catch(e) { results[cat]=[]; }
+  }
+  document.getElementById('loadingMsg').textContent = 'Writing your briefing...';
+  let briefing = '';
+  try {
+    const titles = Object.entries(results).map(([c,items])=>`${c}: ${items.map(i=>i.title).join(', ')}`).join(' | ');
+    briefing = await callClaude(`Tech analyst: Based on today: ${titles} — write 4-sentence "Big Picture" briefing for an AI automation entrepreneur. Be sharp.`, false);
+  } catch(e) {}
+  hideLoading();
+  container.style.display = 'block';
+  const today = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  container.innerHTML = `
+    <div class="big-picture">
+      <div class="bp-header">
+        <i class="ti ti-brain" style="font-size:18px;color:#60a5fa;"></i>
+        <h3>Today's Big Picture</h3>
+        <span class="date-text">${today}</span>
+      </div>
+      <p>${briefing}</p>
+    </div>
+    ${CATEGORIES.map(cat=>`
+      <div class="category-section">
+        <p class="category-label">${cat}</p>
+        <div class="news-list">
+          ${(results[cat]||[]).map((a,i)=>`
+            <div class="card ${a.important?'top':''}">
+              <div class="card-header">
+                <p class="card-title">${a.title}</p>
+                <div style="display:flex;align-items:center;gap:4px;">
+                  ${a.important?'<span class="badge-top">Top</span>':''}
+                  <button class="bookmark-btn" onclick="digestBookmark(this,'${cat}',${i},${JSON.stringify(JSON.stringify(results[cat]))})" title="Save">
+                    <i class="ti ti-bookmark"></i>
+                  </button>
+                </div>
+              </div>
+              <p style="font-size:13px;color:#aaa;line-height:1.6;">${a.summary}</p>
+              <p class="meta-text" style="margin-top:6px;">${a.source}</p>
+            </div>`).join('')}
+        </div>
+      </div>`).join('')}
+    <div class="digest-actions">
+      <button class="btn" onclick="loadDailyDigest()"><i class="ti ti-refresh"></i> Refresh</button>
+    </div>`;
+}
+
+function digestBookmark(btnEl, cat, idx, articlesStr) {
+  try {
+    const articles = JSON.parse(JSON.parse(articlesStr));
+    const article = articles[idx];
+    if (!article) return;
+    const already = bookmarks.findIndex(b=>b.title===article.title);
+    if (already===-1) { bookmarks.push({...article, savedAt:new Date().toLocaleString('en-IN')}); btnEl.classList.add('saved'); btnEl.querySelector('i').className='ti ti-bookmark-filled'; }
+    else { bookmarks.splice(already,1); btnEl.classList.remove('saved'); btnEl.querySelector('i').className='ti ti-bookmark'; }
+    saveBookmarks();
+  } catch(e) {}
+}
+
+function showLoading(msg) {
+  document.getElementById('loadingMsg').textContent = msg;
+  document.getElementById('loadingState').style.display = 'block';
+}
+function hideLoading() { document.getElementById('loadingState').style.display = 'none'; }
+</script>
+</body>
+</html>
